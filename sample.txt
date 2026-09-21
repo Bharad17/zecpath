@@ -1,0 +1,2 @@
+Welcome to Day 2.
+This is a Python file handling exercise.
