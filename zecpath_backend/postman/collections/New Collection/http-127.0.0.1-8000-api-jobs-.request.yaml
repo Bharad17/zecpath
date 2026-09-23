@@ -1,0 +1,13 @@
+$kind: http-request
+name: http://127.0.0.1:8000/api/jobs/
+description: ""
+url: http://127.0.0.1:8000/api/jobs/
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"title\": \"Java Developer\"\r
+
+    }"
+order: 1790176804607
