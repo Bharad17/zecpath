@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job, User
+from .models import Job, User, application, Candidate
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -65,3 +65,8 @@ class LoginSerializer(serializers.Serializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+class ApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = application
+        fields = ['id', 'job', 'candidate', 'applied_at']
+        read_only_fields = ['candidate', 'applied_at']

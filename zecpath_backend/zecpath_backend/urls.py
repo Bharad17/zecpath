@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from core.views import UserTestAPI,JobListAPI,SignupAPI, LoginAPI, LogoutAPI
+from core.views import UserTestAPI,JobListAPI,SignupAPI, LoginAPI, LogoutAPI, ApplicationAPI, AdminControlAPI
 from rest_framework_simplejwt.views import TokenRefreshView
 
 
@@ -28,4 +28,6 @@ urlpatterns = [
     path('api/login/', LoginAPI.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
     path('api/logout/', LogoutAPI.as_view()),
+    path('api/applications/', ApplicationAPI.as_view()),
+    path('api/admin-control/', AdminControlAPI.as_view()),
 ]

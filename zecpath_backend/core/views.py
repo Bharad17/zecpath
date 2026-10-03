@@ -1,8 +1,13 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from .permissions import IsEmployer
+from django.utils import timezone
+from .models import Candidate, application
+from .serializers import ApplicationSerializer
+from .permissions import IsCandidate
+from .permissions import IsAdmin
 
 from services.job_service import get_all_jobs,create_job
 from .serializers import JobSerializer, SignupSerializer, LoginSerializer
@@ -77,7 +82,7 @@ class SignupAPI(APIView):
         )
 
 class JobListAPI(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsEmployer]
     def get(self, request):
         jobs = get_all_jobs()
         serializer = JobSerializer(jobs, many=True)
@@ -102,6 +107,48 @@ class JobListAPI(APIView):
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+class ApplicationAPI(APIView):
+    permission_classes = [IsCandidate]
+
+    def post(self, request):
+        try:
+            candidate = Candidate.objects.get(user=request.user)
+        except Candidate.DoesNotExist:
+            return Response(
+                {"error": "Candidate profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = ApplicationSerializer(data=request.data)
+
+        if serializer.is_valid():
+            app = application.objects.create(
+                job=serializer.validated_data['job'],
+                candidate=candidate,
+                user=request.user,
+                applied_at=timezone.now()
+            )
+
+            response_serializer = ApplicationSerializer(app)
+
+            return Response(
+                response_serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+class AdminControlAPI(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        return Response(
+            {"message": "Admin control API is working"},
+            status=status.HTTP_200_OK
         )
 
 
