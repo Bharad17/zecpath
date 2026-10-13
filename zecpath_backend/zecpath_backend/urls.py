@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from core.views import UserTestAPI,JobListAPI,SignupAPI, LoginAPI, LogoutAPI, ApplicationAPI, AdminControlAPI
+from core.profile_views import CandidateProfileAPI, EmployerProfileAPI
 from rest_framework_simplejwt.views import TokenRefreshView
 
 
@@ -30,4 +31,6 @@ urlpatterns = [
     path('api/logout/', LogoutAPI.as_view()),
     path('api/applications/', ApplicationAPI.as_view()),
     path('api/admin-control/', AdminControlAPI.as_view()),
+    path('api/candidate/profile/', CandidateProfileAPI.as_view()),
+    path('api/employer/profile/', EmployerProfileAPI.as_view()),
 ]

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job, User, application, Candidate
+from .models import Job, User, application, Candidate, Employer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -70,3 +70,54 @@ class ApplicationSerializer(serializers.ModelSerializer):
         model = application
         fields = ['id', 'job', 'candidate', 'applied_at']
         read_only_fields = ['candidate', 'applied_at']
+class CandidateProfileSerializer(serializers.ModelSerializer):
+    def validate_expected_salary(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError(
+                "Expected salary cannot be negative."
+            )
+        return value
+
+    def validate_skills(self, value):
+        if len(value) > 200:
+            raise serializers.ValidationError(
+            "Skills cannot exceed 200 characters."
+            )
+        return value
+
+    class Meta:
+        model = Candidate
+        fields = [
+            "id",
+            "skills",
+            "education",
+            "experience",
+            "expected_salary",
+        ]
+        read_only_fields = ["id"]
+
+
+class EmployerProfileSerializer(serializers.ModelSerializer):
+    def validate_company_name(self, value):
+        if not value.strip():
+            raise serializers.ValidationError(
+                "Company name cannot be empty."
+            )
+        return value
+
+    def validate_company_size(self, value):
+        if value and not value.strip():
+            raise serializers.ValidationError(
+            "Company size cannot contain only spaces."
+        )
+        return value
+    class Meta:
+        model = Employer
+        fields = [
+            "id",
+            "company_name",
+            "domain",
+            "company_size",
+            "is_verified",
+        ]
+        read_only_fields = ["id", "is_verified"]
