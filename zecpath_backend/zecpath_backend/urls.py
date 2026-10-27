@@ -16,9 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from core.views import UserTestAPI,JobListAPI,SignupAPI, LoginAPI, LogoutAPI, ApplicationAPI, AdminControlAPI
+from core.views import UserTestAPI, JobListAPI, SignupAPI, LoginAPI, LogoutAPI, ApplicationAPI, AdminControlAPI, Trigger500API
 from core.profile_views import CandidateProfileAPI, EmployerProfileAPI
 from rest_framework_simplejwt.views import TokenRefreshView
+from core.profile_views import (
+    CandidateProfileAPI,
+    EmployerProfileAPI,
+    CandidateResumeAPI,
+)
 
 
 urlpatterns = [
@@ -33,4 +38,6 @@ urlpatterns = [
     path('api/admin-control/', AdminControlAPI.as_view()),
     path('api/candidate/profile/', CandidateProfileAPI.as_view()),
     path('api/employer/profile/', EmployerProfileAPI.as_view()),
+    path("api/candidate/resume/", CandidateResumeAPI.as_view()),
+    path("api/test-500/", Trigger500API.as_view()),
 ]

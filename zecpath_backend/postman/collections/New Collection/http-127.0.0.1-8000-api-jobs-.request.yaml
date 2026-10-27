@@ -10,4 +10,5 @@ body:
     \    \"title\": \"Java Developer\"\r
 
     }"
+examples: .resources/http-127.0.0.1-8000-api-jobs-.resources/examples
 order: 1790176804607

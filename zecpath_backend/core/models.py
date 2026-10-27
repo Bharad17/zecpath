@@ -1,3 +1,5 @@
+import os
+from uuid import uuid4
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 class User(AbstractUser):
@@ -28,7 +30,15 @@ class Employer(models.Model):
     company_size = models.CharField(max_length=50, blank=True, default="")
     is_verified = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
+def resume_upload_path(instance, filename):
+    # Keep only the extension; do not reuse the original filename.
+    filename = filename.replace("\\", "/").rsplit("/", 1)[-1]
+    extension = os.path.splitext(filename)[1].lower()
 
+    return (
+        f"resumes/candidate_{instance.user_id}/"
+        f"{uuid4().hex}{extension}"
+    )
 
 class Candidate(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -39,8 +49,20 @@ class Candidate(models.Model):
         max_digits=10,
         decimal_places=2,
         null=True,
-        blank=True
+        blank=True,
     )
+
+    resume = models.FileField(
+        upload_to=resume_upload_path,
+        null=True,
+        blank=True,
+    )
+    resume_sha256 = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+    )
+
     is_deleted = models.BooleanField(default=False)
 
 

@@ -16,16 +16,15 @@ class LoginAPI(APIView):
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-
-        if serializer.is_valid():
-            return Response(
-                serializer.validated_data,
-                status=status.HTTP_200_OK
-            )
-
+        serializer.is_valid(raise_exception=True)
         return Response(
-            serializer.errors,
-            status=status.HTTP_401_UNAUTHORIZED
+            {
+                "success": True,
+                "status_code": status.HTTP_200_OK,
+                "message": "Login successful",
+                "data": serializer.validated_data,
+            },
+            status=status.HTTP_200_OK
         )
 class LogoutAPI(APIView):
 
@@ -65,24 +64,25 @@ class SignupAPI(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
 
-        if serializer.is_valid():
-            user = serializer.save()
-
-            return Response(
-                {
-                    "message": "User created successfully",
-                    "user_id": user.id,
-                },
-                status=status.HTTP_201_CREATED
-            )
-
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "success": True,
+                "status_code": status.HTTP_201_CREATED,
+                "message": "User created successfully",
+                "data": {"user_id": user.id},
+            },
+            status=status.HTTP_201_CREATED
         )
 
 class JobListAPI(APIView):
-    permission_classes = [IsEmployer]
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsEmployer()]
+        from rest_framework.permissions import IsAuthenticated
+        return [IsAuthenticated()]
+
     def get(self, request):
         jobs = get_all_jobs()
         serializer = JobSerializer(jobs, many=True)
@@ -94,53 +94,62 @@ class JobListAPI(APIView):
 
     def post(self, request):
         serializer = JobSerializer(data=request.data)
-
-        if serializer.is_valid():
-            job = create_job(serializer.validated_data)
-            response_serializer = JobSerializer(job)
-
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-
+        serializer.is_valid(raise_exception=True)
+        job = create_job(serializer.validated_data)
+        response_serializer = JobSerializer(job)
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "success": True,
+                "status_code": status.HTTP_201_CREATED,
+                "message": "Job created successfully",
+                "data": response_serializer.data,
+            },
+            status=status.HTTP_201_CREATED
         )
 
 class ApplicationAPI(APIView):
     permission_classes = [IsCandidate]
 
     def post(self, request):
-        try:
-            candidate = Candidate.objects.get(user=request.user)
-        except Candidate.DoesNotExist:
+        candidate = Candidate.objects.filter(user=request.user, is_deleted=False).first()
+        if not candidate:
             return Response(
-                {"error": "Candidate profile not found"},
+                {"detail": "Candidate profile not found or inactive."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         serializer = ApplicationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        job = serializer.validated_data['job']
 
-        if serializer.is_valid():
-            app = application.objects.create(
-                job=serializer.validated_data['job'],
-                candidate=candidate,
-                user=request.user,
-                applied_at=timezone.now()
-            )
-
-            response_serializer = ApplicationSerializer(app)
-
+        # Duplicate application prevention
+        if application.objects.filter(candidate=candidate, job=job).exists():
             return Response(
-                response_serializer.data,
-                status=status.HTTP_201_CREATED
+                {
+                    "success": False,
+                    "status_code": status.HTTP_400_BAD_REQUEST,
+                    "message": "You have already applied for this job.",
+                    "errors": {"job": ["Duplicate application not permitted."]}
+                },
+                status=status.HTTP_400_BAD_REQUEST
             )
 
+        app = application.objects.create(
+            job=job,
+            candidate=candidate,
+            user=request.user,
+            applied_at=timezone.now()
+        )
+
+        response_serializer = ApplicationSerializer(app)
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "success": True,
+                "status_code": status.HTTP_201_CREATED,
+                "message": "Job application submitted successfully",
+                "data": response_serializer.data,
+            },
+            status=status.HTTP_201_CREATED
         )
 class AdminControlAPI(APIView):
     permission_classes = [IsAdmin]
@@ -154,3 +163,9 @@ class AdminControlAPI(APIView):
 
 
 
+
+
+class Trigger500API(APIView):
+    """Testing endpoint for Day 13 Status Code Standardization (500 Internal Server Error)."""
+    def get(self, request):
+        raise RuntimeError("Simulated unhandled internal server error for Day 13 testing.")

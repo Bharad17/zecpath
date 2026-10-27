@@ -1,0 +1,36 @@
+$kind: http-example
+name: http://127.0.0.1:8000/api/jobs/
+request:
+  url: http://127.0.0.1:8000/api/jobs/
+  method: GET
+  body:
+    type: json
+    content: "{\r
+
+      \    \"email\": \"candidate1@test.com\",\r
+
+      \    \"password\": \"TestPassword123!*\"\r
+
+      }"
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    date: Sat, 03 Oct 2026 07:25:27 GMT
+    server: WSGIServer/0.2 CPython/3.14.5
+    content-type: application/json
+    www-authenticate: Bearer realm="api"
+    vary: Accept
+    allow: GET, POST, HEAD, OPTIONS
+    x-frame-options: DENY
+    content-length: "58"
+    x-content-type-options: nosniff
+    referrer-policy: same-origin
+    cross-origin-opener-policy: same-origin
+  body:
+    type: json
+    content: |-
+      {
+        "detail": "Authentication credentials were not provided."
+      }
+order: 1791012407364
