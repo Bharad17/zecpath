@@ -1,6 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsEmployer
 from django.utils import timezone
@@ -47,13 +49,15 @@ class LogoutAPI(APIView):
                 status=status.HTTP_200_OK
             )
 
-        except Exception:
+        except TokenError:
             return Response(
                 {"error": "Invalid refresh token"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
 class UserTestAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         return Response(
             {"message": "User API is working"},
@@ -81,7 +85,6 @@ class JobListAPI(APIView):
     def get_permissions(self):
         if self.request.method == "POST":
             return [IsEmployer()]
-        from rest_framework.permissions import IsAuthenticated
         return [IsAuthenticated()]
 
     def get(self, request):
@@ -114,13 +117,16 @@ class ApplicationAPI(APIView):
     def get_permissions(self):
         if self.request.method == "POST":
             return [IsCandidate()]
-        from rest_framework.permissions import IsAuthenticated
         return [IsAuthenticated()]
 
     def get(self, request):
         applications = application.objects.select_related(
             "job", "candidate", "user"
         ).all()
+        if request.user.role == "CANDIDATE":
+            applications = applications.filter(user=request.user)
+        elif request.user.role == "EMPLOYER":
+            applications = applications.filter(job__employer__user=request.user)
 
         search = request.query_params.get("search")
         role = request.query_params.get("role")
