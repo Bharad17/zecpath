@@ -11,30 +11,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='Candidate',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('skills', models.CharField(max_length=200)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='core.user')),
-            ],
-        ),
-        migrations.AddField(
-            model_name='application',
-            name='candidate',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='core.candidate'),
-        ),
-        migrations.CreateModel(
-            name='Employer',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('company_name', models.CharField()),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='core.user')),
-            ],
-        ),
-        migrations.AddField(
-            model_name='job',
-            name='employer',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='core.employer'),
-        ),
     ]

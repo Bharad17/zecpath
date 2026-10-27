@@ -11,6 +11,7 @@ from .permissions import IsAdmin
 
 from services.job_service import get_all_jobs,create_job
 from .serializers import JobSerializer, SignupSerializer, LoginSerializer
+from .pagination import StandardResultsPagination
 
 class LoginAPI(APIView):
 
@@ -84,13 +85,15 @@ class JobListAPI(APIView):
         return [IsAuthenticated()]
 
     def get(self, request):
-        jobs = get_all_jobs()
-        serializer = JobSerializer(jobs, many=True)
-
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
+        jobs = get_all_jobs(
+            search=request.query_params.get("search"),
+            role=request.query_params.get("role"),
         )
+        paginator = StandardResultsPagination()
+        page = paginator.paginate_queryset(jobs, request)
+        serializer = JobSerializer(page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = JobSerializer(data=request.data)
@@ -108,7 +111,36 @@ class JobListAPI(APIView):
         )
 
 class ApplicationAPI(APIView):
-    permission_classes = [IsCandidate]
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsCandidate()]
+        from rest_framework.permissions import IsAuthenticated
+        return [IsAuthenticated()]
+
+    def get(self, request):
+        applications = application.objects.select_related(
+            "job", "candidate", "user"
+        ).all()
+
+        search = request.query_params.get("search")
+        role = request.query_params.get("role")
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+
+        if search:
+            applications = applications.filter(job__title__icontains=search)
+        if role:
+            applications = applications.filter(user__role=role)
+        if date_from:
+            applications = applications.filter(applied_at__date__gte=date_from)
+        if date_to:
+            applications = applications.filter(applied_at__date__lte=date_to)
+
+        applications = applications.order_by("-applied_at", "-id")
+        paginator = StandardResultsPagination()
+        page = paginator.paginate_queryset(applications, request)
+        serializer = ApplicationSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         candidate = Candidate.objects.filter(user=request.user, is_deleted=False).first()

@@ -70,8 +70,20 @@ class Job(models.Model):
     employer = models.ForeignKey(Employer,on_delete = models.CASCADE,null = True,blank = True)
     title = models.CharField(max_length=100)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["title"]),
+            models.Index(fields=["employer"]),
+        ]
+
 class application(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     job = models.ForeignKey(Job,on_delete=models.CASCADE)
     candidate = models.ForeignKey(Candidate,on_delete=models.CASCADE,null = True,blank = True)
     applied_at = models.DateTimeField()  
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["applied_at"]),
+            models.Index(fields=["job", "applied_at"]),
+        ]
